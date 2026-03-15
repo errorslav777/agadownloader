@@ -1,0 +1,30 @@
+import requests
+from telegram import Update
+from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
+
+TOKEN = "8393589403:AAHhK6_G-k5JGn7jYAXOSafA-eYRB9zNMQg"
+
+def get_video(url):
+    api = "https://tikwm.com/api/"
+    r = requests.get(api, params={"url": url}).json()
+    return r["data"]["play"]
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+
+    if "tiktok.com" in text:
+        video_url = get_video(text)
+
+        video = requests.get(video_url).content
+        with open("video.mp4", "wb") as f:
+            f.write(video)
+
+        await update.message.reply_video(open("video.mp4", "rb"))
+    else:
+        await update.message.reply_text("Пришли ссылку на TikTok")
+
+app = ApplicationBuilder().token(TOKEN).build()
+
+app.add_handler(MessageHandler(filters.TEXT, handle_message))
+
+app.run_polling()
